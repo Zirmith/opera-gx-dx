@@ -3,7 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Link Generation Response</title>
+  <title>Ui-Beta-Testing</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    #link-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      margin-bottom: 10px;
+    }
+
+    input {
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #response-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #download-link {
+      display: none;
+      padding: 10px;
+      background-color: #4caf50;
+      color: white;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #download-link:hover {
+      background-color: #45a049;
+    }
+
+    /* Loading spinner styles */
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <h1>Link Generation Response</h1>
@@ -14,32 +100,50 @@
     <button type="button" onclick="fetchLinks()">Generate Links</button>
   </form>
 
-  <div id="response-container"></div>
+  <div id="response-container">
+    <div class="loader"></div>
+    <p class="loading-text">Generating links...</p>
+  </div>
 
-  <a id="download-link" style="display: none;" download>Download File</a>
-
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <a id="download-link" download>Download File</a>
 
   <script>
-    // Function to fetch and display the response
     async function fetchLinks() {
       try {
         const quantity = document.getElementById('quantity').value;
 
-        const response = await axios.post('/generate-links', {
-          quantity,
-          partnerUserId: '15ddc8b179e57bfc769afe550245833ef836bf303c076ca96947e0954f0766fe',
+        // Show loading spinner and text
+        const loader = document.querySelector('.loader');
+        const loadingText = document.querySelector('.loading-text');
+        loader.style.display = 'inline-block';
+        loadingText.style.display = 'block';
+
+        const response = await fetch('/generate-links', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            quantity,
+            partnerUserId: '15ddc8b179e57bfc769afe550245833ef836bf303c076ca96947e0954f0766fe',
+          }),
         });
 
-        if (response.data.success) {
-          displayResponse(response.data);
+        // Hide loading spinner and text
+        loader.style.display = 'none';
+        loadingText.style.display = 'none';
+
+        if (response.ok) {
+          const responseData = await response.json();
+          displayResponse(responseData);
 
           // Check if the response contains a file URL
-          if (response.data.data.fileUrl) {
-            showDownloadLink(response.data.data.fileUrl);
+          if (responseData.data.fileUrl) {
+            showDownloadLink(responseData.data.fileUrl);
           }
         } else {
-          displayError(response.data);
+          const errorData = await response.json();
+          displayError(errorData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -62,7 +166,7 @@
     function showDownloadLink(fileUrl) {
       const downloadLink = document.getElementById('download-link');
       downloadLink.href = fileUrl;
-      downloadLink.style.display = 'block';
+      downloadLink.style.display = 'inline-block';
     }
   </script>
 </body>
