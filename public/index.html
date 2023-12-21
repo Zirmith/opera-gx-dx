@@ -3,30 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Direct Fulfillment Response</title>
+  <title>Link Generation Response</title>
 </head>
 <body>
-  <h1>Direct Fulfillment Response</h1>
+  <h1>Link Generation Response</h1>
+
+  <form id="link-form">
+    <label for="quantity">Enter Quantity:</label>
+    <input type="number" id="quantity" name="quantity" min="1" required>
+    <button type="button" onclick="fetchLinks()">Generate Links</button>
+  </form>
+
   <div id="response-container"></div>
+
+  <a id="download-link" style="display: none;" download>Download File</a>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
     // Function to fetch and display the response
-    async function fetchData() {
+    async function fetchLinks() {
       try {
-        const response = await fetch('/direct-fulfillment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ partnerUserId: '15ddc8b179e57bfc769afe550245833ef836bf303c076ca96947e0954f0766fe' }),
+        const quantity = document.getElementById('quantity').value;
+
+        const response = await axios.post('/generate-links', {
+          quantity,
+          partnerUserId: '15ddc8b179e57bfc769afe550245833ef836bf303c076ca96947e0954f0766fe',
         });
 
-        if (response.ok) {
-          const responseData = await response.json();
-          displayResponse(responseData);
+        if (response.data.success) {
+          displayResponse(response.data);
+
+          // Check if the response contains a file URL
+          if (response.data.data.fileUrl) {
+            showDownloadLink(response.data.data.fileUrl);
+          }
         } else {
-          const errorData = await response.json();
-          displayError(errorData);
+          displayError(response.data);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -45,8 +58,12 @@
       responseContainer.innerHTML = `<p>Error: ${error.error}</p>`;
     }
 
-    // Fetch data when the page loads
-    window.onload = fetchData;
+    // Function to show the download link
+    function showDownloadLink(fileUrl) {
+      const downloadLink = document.getElementById('download-link');
+      downloadLink.href = fileUrl;
+      downloadLink.style.display = 'block';
+    }
   </script>
 </body>
 </html>
