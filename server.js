@@ -33,11 +33,12 @@ app.post('/direct-fulfillment', async (req, res) => {
 
     // Handle the response from the external API
     const apiData = apiResponse.data;
+    const link = `https://discord.com/billing/partner-promotions/118023171227438115/${apiData.token}`
 
     // Perform additional processing of the API response if needed
 
     // Send a custom response to the client
-    res.status(200).json({ success: true, data: apiData });
+    res.status(200).json({ success: true, data: link });
   } catch (error) {
     console.error('Error processing request:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
