@@ -39,7 +39,7 @@ app.post('/generate-links', async (req, res) => {
     res.status(200).json({ success: true, fileUrl: `/download/${filename}` });
 
     // Delete the file after sending
-    await unlinkAsync(filePath);
+  //  await unlinkAsync(filePath);
   } catch (error) {
     console.error('Error generating links:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
