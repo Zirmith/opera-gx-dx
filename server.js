@@ -8,6 +8,7 @@ const { promisify } = require('util');
 
 const app = express();
 const port = 3000;
+const links = [];
 
 app.use(bodyParser.json());
 
@@ -18,34 +19,26 @@ const unlinkAsync = promisify(fs.unlink);
 app.use(express.static('public'));
 
 
-app.post('/generate-links', async (req, res) => {
+app.get('/generate-links', async (req, res) => {
   try {
-    const { quantity } = req.body;
+    // Extract the quantity from the query parameters or set a default value
+    const quantity = Math.floor(Math.random() * 10) + 1;
 
     // Perform any advanced logic or processing here
-
-    const uploadsDir = path.join(__dirname, 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
 
     // Generate the specified number of links
     const links = await generateLinks(quantity);
 
-    // Save the links to a file
-    const filename = 'generated_links.txt';
-    const filePath = path.join(uploadsDir, filename); // Use uploadsDir here
-    await fs.writeFile(filePath, links.join('\n'));
+    // Send the links as a response to the client
+    res.status(200).json({ success: true, links: links });
 
-    // Send the file path as a response to the client
-    res.status(200).json({ success: true, fileUrl: `/download/${filename}` });
-
-    // Delete the file after sending
-  //  await unlinkAsync(filePath);
   } catch (error) {
     console.error('Error generating links:', error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
-  
+
+
 // Serve static files (including the generated file for download)
 app.use('/download', express.static('uploads'));
 
@@ -62,7 +55,6 @@ function generateRandomString(length) {
 
 // Function to generate links
 async function generateLinks(quantity) {
-    const links = [];
   
     for (let i = 0; i < quantity; i++) {
       // Generate a random string of length 64
