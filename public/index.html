@@ -3,171 +3,317 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ui-Beta-Testing</title>
+  <title>VenariCord - Discord Nitro Gifts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
     body {
       font-family: 'Arial', sans-serif;
-      background-color: #f5f5f5;
+      background-color: #2c2f33; /* Darker background color */
+      color: #ffffff; /* White text */
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     h1 {
-      color: #333;
-    }
-
-    #link-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      color: #ffffff;
       margin-bottom: 20px;
+      text-align: center;
     }
 
-    label {
-      margin-bottom: 10px;
-    }
-
-    input {
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-
-    button {
-      padding: 10px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #45a049;
+    p {
+      color: #99aab5; /* Lighter text color */
     }
 
     #response-container {
-      text-align: center;
-      margin-bottom: 20px;
+      text-align: left;
+      max-height: 60vh;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #36393f; /* Discord-like background color */
+      width: 80%;
+      overflow-y: auto;
     }
 
-    #download-link {
-      display: none;
-      padding: 10px;
-      background-color: #4caf50;
-      color: white;
+    .link-card {
+      background-color: #40444b; /* Discord-like card background color */
+      border: 1px solid #3e4249; /* Discord-like card border */
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .link-card a {
+      color: #7289da; /* Discord brand color */
       text-decoration: none;
-      border: none;
+      transition: color 0.3s ease;
+      display: block;
+    }
+
+    .link-card a:hover {
+      color: #ffffff; /* White color on hover */
+    }
+
+    .voided-link {
+      text-decoration: line-through;
+      color: #747f8d; /* Discord-like muted color */
+      pointer-events: none;
+    }
+
+    .long-link::after {
+      content: " (Claim Gift)";
+      color: #43b581; /* Green color for claiming */
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      position: absolute;
+      right: 15px;
+      bottom: 15px;
+      font-size: 14px;
     }
 
-    #download-link:hover {
-      background-color: #45a049;
+    .timer {
+      margin-top: 10px;
+      color: #99aab5; /* Lighter text color for timer */
     }
 
-    /* Loading spinner styles */
-    .loader {
-      border: 8px solid #f3f3f3;
-      border-top: 8px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      display: none;
+    #footer {
+  background-color: #2c2f33; /* Darker background color */
+  color: #ffffff; /* White text color */
+  padding: 10px 20px; /* Add some padding */
+  display: flex;
+  justify-content: space-between; /* Space items evenly */
+  position: absolute; /* Change position to absolute */
+  align-items: center; /* Center items vertically */
+  width: 100%;
+  box-sizing: border-box; /* Include padding in width */
+  align-self: flex-start; /* Align footer at the top */
+  top: 0; /* Set the top position to 0 */
+}
+
+
+#footer p {
+  margin: 0;
+  margin-right: 10px; /* Reduce the right margin */
+}
+
+#current-time, #current-year {
+  margin-right: 10px; /* Reduce the right margin */
+}
+
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-      display: none;
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <h1>Link Generation Response</h1>
 
-  <form id="link-form">
-    <label for="quantity">Enter Quantity:</label>
-    <input type="number" id="quantity" name="quantity" min="1" required>
-    <button type="button" onclick="fetchLinks()">Generate Links</button>
-  </form>
+  <div id="footer">
+    <div class="footer-info">
+      <span id="shard-info">Shard: </span>
+      <span id="server-info">Server: US East</span>
+    </div>
+    <div class="footer-info">
+      <span id="current-time"></span>
+      <span id="current-year"></span>
+    </div>
+  </div>
+
+
+  <h1>Welcome to VenariCord</h1>
+  <p>VenariCord is a platform that provides access to exclusive Discord Nitro gift links.</p>
+  <p>Our service allows you to generate unique gift links to claim Discord Nitro subscriptions.</p>
+  <p>Explore our latest offers below and claim your Nitro gifts today!</p>
 
   <div id="response-container">
     <div class="loader"></div>
     <p class="loading-text">Generating links...</p>
   </div>
 
-  <a id="download-link" download>Download File</a>
+  <div id="timer" class="timer"></div>
 
+   
   <script>
-    async function fetchLinks() {
+    window.currentPage = 1;
+    window.linksPerPage = 6;
+
+    window.isVoided = function(link) {
+      return link.classList.contains('voided-link');
+    };
+
+    async function updateLinks(page) {
       try {
-        const quantity = document.getElementById('quantity').value;
-
-        // Show loading spinner and text
-        const loader = document.querySelector('.loader');
-        const loadingText = document.querySelector('.loading-text');
-        loader.style.display = 'inline-block';
-        loadingText.style.display = 'block';
-
-        const response = await fetch('/generate-links', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            quantity,
-            partnerUserId: '15ddc8b179e57bfc769afe550245833ef836bf303c076ca96947e0954f0766fe',
-          }),
+        const response = await fetch(`/generate-links?page=${page}`, {
+          method: 'GET',
         });
 
-        // Hide loading spinner and text
-        loader.style.display = 'none';
-        loadingText.style.display = 'none';
+        const responseData = await response.json();
 
         if (response.ok) {
-          const responseData = await response.json();
           displayResponse(responseData);
-          
-          // Check if the response contains a file URL
-          if (responseData.data.fileUrl) {
-            showDownloadLink(responseData.data.fileUrl);
-          }
+          startTimer(60); // Start the timer for 60 seconds
         } else {
-          const errorData = await response.json();
-          displayError(errorData);
+          displayError(responseData);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     }
 
-    // Function to display the successful response
     function displayResponse(data) {
       const responseContainer = document.getElementById('response-container');
-      responseContainer.innerHTML = `<p>Success: ${data.success}</p><p>Data: https://https://etc-score-ui.onrender.com/${JSON.stringify(data.fileUrl)}</p>`;
+      const oldLinks = responseContainer.querySelectorAll('.link-card');
+
+      oldLinks.forEach(link => {
+        link.classList.add('animate__animated', 'animate__fadeOut');
+        setTimeout(() => {
+          link.remove();
+        }, 500);
+      });
+
+      setTimeout(() => {
+        data.links.forEach((link, index) => {
+          if (index < window.linksPerPage) {
+            const linkCard = document.createElement('div');
+            linkCard.classList.add('link-card', 'animate__animated', 'animate__fadeIn');
+
+            const linkElement = document.createElement('a');
+            linkElement.href = link;
+            linkElement.target = '_blank';
+            linkElement.textContent = link.length > 50 ? 'Claim Gift' : link;
+            linkElement.classList.add(link.length > 50 ? 'long-link' : '');
+
+            if (isVoided(linkElement)) {
+  linkElement.classList.add('voided-link');
+} else {
+  linkElement.addEventListener('click', (event) => {
+    event.preventDefault();
+    if (!linkElement.classList.contains('voided-link')) {
+      const customPrompt = prompt('Enter "claim" to claim this gift:');
+      if (customPrompt === 'claim') {
+        linkElement.classList.add('voided-link');
+        linkElement.parentElement.remove(); // Remove the link container from the DOM
+        window.open(linkElement.href, '_blank');
+        // Perform additional actions here, such as marking the link as claimed
+      } else {
+        alert('Gift not claimed.');
+      }
+    }
+  });
+}
+
+
+            
+            linkCard.appendChild(linkElement);
+            responseContainer.appendChild(linkCard);
+          }
+        });
+
+        const loadingText = document.querySelector('.loading-text');
+        if (loadingText) {
+          loadingText.remove();
+        }
+      }, 500);
     }
 
-    // Function to display the error response
     function displayError(error) {
       const responseContainer = document.getElementById('response-container');
       responseContainer.innerHTML = `<p>Error: ${error.error}</p>`;
     }
 
-    // Function to show the download link
-    function showDownloadLink(fileUrl) {
-      const downloadLink = document.getElementById('download-link');
-      downloadLink.href = fileUrl;
-      downloadLink.style.display = 'inline-block';
+    function startTimer(duration) {
+      let timer = duration;
+      const timerElement = document.getElementById('timer');
+
+      const intervalId = setInterval(() => {
+        const minutes = Math.floor(timer / 60);
+        const seconds = timer % 60;
+
+        timerElement.textContent = `Next update in ${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+
+        if (--timer < 0) {
+          clearInterval(intervalId);
+          timerElement.textContent = '';
+          updateLinks(window.currentPage);
+        }
+      }, 1000);
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateLinks(window.currentPage);
+    });
+
+
+     // Function to update the current time and year
+     function updateTimeAndYear() {
+      const currentTime = new Date();
+      const currentYear = currentTime.getFullYear();
+
+      // Format the current time as HH:MM:SS AM/PM
+      const hours = currentTime.getHours();
+      const minutes = currentTime.getMinutes();
+      const seconds = currentTime.getSeconds();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const formattedTime = `${hours % 12 || 12}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds} ${ampm}`;
+
+      // Update the footer content
+      document.getElementById('current-time').textContent = `Current Time: ${formattedTime}`;
+      document.getElementById('current-year').textContent = `Year: ${currentYear}`;
+    }
+
+    // Function to generate random shard number
+    function generateShardNumber() {
+      const totalShards = 10;
+      const currentShard = Math.floor(Math.random() * totalShards) + 1;
+      return `Shard: ${currentShard}/${totalShards}`;
+    }
+
+    // Array of server locations
+    const serverLocations = ['US West', 'US East', 'Europe', 'Asia', 'Australia'];
+
+    // Function to select random server location
+    function selectServerLocation() {
+      const randomIndex = Math.floor(Math.random() * serverLocations.length);
+      return `Server: ${serverLocations[randomIndex]}`;
+    }
+
+    // Function to display current time and year
+    function displayCurrentTime() {
+      const currentTimeElement = document.getElementById('current-time');
+      const currentDateElement = document.getElementById('current-year');
+      const now = new Date();
+      currentTimeElement.textContent = `Current Time: ${now.toLocaleTimeString()}`;
+      currentDateElement.textContent = `Year: ${now.getFullYear()}`;
+    }
+
+    // Update shard and server information
+    function updateFooterInfo() {
+      const shardInfoElement = document.getElementById('shard-info');
+      const serverInfoElement = document.getElementById('server-info');
+
+      shardInfoElement.textContent = generateShardNumber();
+      //serverInfoElement.textContent = selectServerLocation();
+    }
+
+      // Call the updateFooterInfo function when the DOM is loaded
+      document.addEventListener('DOMContentLoaded', () => {
+      updateFooterInfo(); // Update initial shard and server info
+      displayCurrentTime(); // Display current time and year
+      setInterval(updateFooterInfo, 60000); // Update shard and server info every minute
+      setInterval(displayCurrentTime, 1000); // Update current time every second
+    });
   </script>
 </body>
 </html>
